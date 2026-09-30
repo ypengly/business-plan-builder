@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum BusinessStage {
+  IDEA
+  PRE_LAUNCH
+  OPERATING
+  GROWING
+}
+
+enum SwotCategory {
+  STRENGTH
+  WEAKNESS
+  OPPORTUNITY
+  THREAT
+}
+
+enum CanvasSection {
+  KEY_PARTNERS
+  KEY_ACTIVITIES
+  KEY_RESOURCES
+  VALUE_PROPOSITIONS
+  CUSTOMER_RELATIONSHIPS
+  CHANNELS
+  CUSTOMER_SEGMENTS
+  COST_STRUCTURE
+  REVENUE_STREAMS
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  googleId      String?   @unique
+  name          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  resetToken    String?
+  resetTokenExp DateTime?
+  plans         BusinessPlan[]
+  activityLogs  ActivityLog[]
+  subscription  Subscription?
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier      String   @default("free")
+  status    String   @default("active")
+  renewsAt  DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  icon        String?
+  industry    String?
+  description String?
+  seedData    Json?
+  createdAt   DateTime @default(now())
+}
+
+model BusinessPlan {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateKey     String?
+  businessName    String
+  industry        String?
+  status          PlanStatus @default(DRAFT)
+  completionScore Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  profile          BusinessProfile?
+  products         Product[]
+  personas         CustomerPersona[]
+  competitors      Competitor[]
+  marketAnalysis   MarketAnalysis?
+  swotItems        SwotItem[]
+  canvasCards      CanvasCard[]
+  marketingPlan    MarketingPlan?
+  salesPlan        SalesPlan?
+  operationsPlan   OperationsPlan?
+  team             TeamMember[]
+  financialProfile FinancialProfile?
+  expenses         Expense[]
+  revenues         Revenue[]
+  projections      FinancialProjection[]
+  sections         PlanSection[]
+  aiTasks          AITask[]
+  sharedLinks      SharedPlan[]
+}
+
+model BusinessProfile {
+  id            String        @id @default(cuid())
+  planId        String        @unique
+  plan          BusinessPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  businessType  String?
+  country       String?
+  city          String?
+  stage         BusinessStage @default(IDEA)
+  description   String?
+  problem       String?
+  mission       String?
+  vision        String?
+  founderInfo   String?
+  employeeCount Int?
+  location      String?
+  website       String?
+  socialLinks   Json?
+}
+
+model Product {
+  id          String       @id @default(cuid())
+  planId      String
+  plan        BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  features    String?
+  benefits    String?
+  price       Float        @default(0)
+  cost        Float        @default(0)
+  revenueModel String?
+  usp         String?
+  createdAt   DateTime     @default(now())
+}
+
+model CustomerPersona {
+  id             String       @id @default(cuid())
+  planId         String
+  plan           BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name           String
+  ageRange       String?
+  gender         String?
+  location       String?
+  incomeRange    String?
+  occupation     String?
+  interests      String?
+  problems       String?
+  buyingBehavior String?
+}
+
+model Competitor {
+  id                  String       @id @default(cuid())
+  planId              String
+  plan                BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name                String
+  productOffering     String?
+  price               String?
+  targetCustomer      String?
+  strengths           String?
+  weaknesses          String?
+  website             String?
+  competitiveAdvantage String?
+}
+
+model MarketAnalysis {
+  id                String       @id @default(cuid())
+  planId            String       @unique
+  plan              BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  overview          String?
+  targetMarket       String?
+  trends            String?
+  customerNeeds      String?
+  opportunities      String?
+  risks              String?
+  aiGenerated        Boolean      @default(false)
+}
+
+model SwotItem {
+  id       String       @id @default(cuid())
+  planId   String
+  plan     BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  category SwotCategory
+  content  String
+  aiGenerated Boolean   @default(false)
+  createdAt DateTime    @default(now())
+}
+
+model CanvasCard {
+  id      String        @id @default(cuid())
+  planId  String
+  plan    BusinessPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  section CanvasSection
+  content String
+  position Int          @default(0)
+}
+
+model MarketingPlan {
+  id                  String       @id @default(cuid())
+  planId              String       @unique
+  plan                BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  brandPositioning    String?
+  goals               String?
+  customerAcquisition String?
+  socialMediaStrategy String?
+  contentStrategy     String?
+  advertising         String?
+  promotions          String?
+  partnerships        String?
+  retentionStrategy   String?
+  monthlyBudget       Float?
+}
+
+model SalesPlan {
+  id               String       @id @default(cuid())
+  planId           String       @unique
+  plan             BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  channels         Json?
+  monthlySalesGoal Float?
+  customerGoal     Int?
+  avgOrderValue    Float?
+  conversionRate   Float?
+}
+
+model OperationsPlan {
+  id            String       @id @default(cuid())
+  planId        String       @unique
+  plan          BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  location      String?
+  openingHours  String?
+  suppliers     String?
+  equipment     String?
+  inventory     String?
+  dailyOps      String?
+  production    String?
+  delivery      String?
+  qualityControl String?
+  technology    String?
+}
+
+model TeamMember {
+  id              String       @id @default(cuid())
+  planId          String
+  plan            BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name            String
+  position        String?
+  responsibilities String?
+  experience      String?
+  skills          String?
+  salary          Float?
+}
+
+model FinancialProfile {
+  id                String       @id @default(cuid())
+  planId            String       @unique
+  plan              BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  startupCosts      Json?
+  fixedMonthlyCosts Float        @default(0)
+  variableCostPerUnit Float      @default(0)
+  sellingPricePerUnit Float      @default(0)
+  monthlyGrowthRate Float        @default(0)
+  startingCash      Float        @default(0)
+}
+
+model Expense {
+  id       String       @id @default(cuid())
+  planId   String
+  plan     BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  category String
+  amount   Float
+  month    Int?
+  recurring Boolean     @default(true)
+}
+
+model Revenue {
+  id           String       @id @default(cuid())
+  planId       String
+  plan         BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  productName  String
+  price        Float
+  unitsSold    Int
+  monthlyGrowth Float       @default(0)
+}
+
+model FinancialProjection {
+  id           String       @id @default(cuid())
+  planId       String
+  plan         BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  month        Int
+  revenue      Float
+  expenses     Float
+  grossProfit  Float
+  netProfit    Float
+  cashFlow     Float
+  cumulativeCash Float
+}
+
+model PlanSection {
+  id        String       @id @default(cuid())
+  planId    String
+  plan      BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  key       String
+  title     String
+  content   String       @db.Text
+  order     Int          @default(0)
+  updatedAt DateTime     @updatedAt
+
+  @@unique([planId, key])
+}
+
+model AITask {
+  id        String       @id @default(cuid())
+  planId    String
+  plan      BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  type      String
+  prompt    String       @db.Text
+  response  String?      @db.Text
+  status    String       @default("pending")
+  createdAt DateTime     @default(now())
+}
+
+model SharedPlan {
+  id        String       @id @default(cuid())
+  planId    String
+  plan      BusinessPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  token     String       @unique
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}

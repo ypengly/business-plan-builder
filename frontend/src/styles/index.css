@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  html.dark body {
+    @apply bg-ink text-paper;
+  }
+  ::selection {
+    background: #C98A3E33;
+  }
+}
+
+@layer components {
+  .rule {
+    @apply border-t border-ink/10;
+  }
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-6;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm bg-forest px-5 py-3 text-sm font-medium text-paper transition-colors hover:bg-forest-dark;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm border border-ink/15 px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-ink/40 dark:border-paper/20 dark:text-paper dark:hover:border-paper/50;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink/70 dark:text-paper/70;
+  }
+  .field-input {
+    @apply w-full rounded-sm border border-ink/15 bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest dark:border-paper/20 dark:text-paper dark:placeholder:text-paper/30;
+  }
+  .card {
+    @apply rounded-sm border border-ink/10 bg-white/60 p-6 dark:border-paper/10 dark:bg-white/5;
+  }
+}
